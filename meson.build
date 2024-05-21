@@ -8,6 +8,7 @@ sources_common = [
     'src/time.c',
     'src/bootloader.c',
     'src/neo.c',
+    'src/delay.c',
 ]
 
 sources_central = [
