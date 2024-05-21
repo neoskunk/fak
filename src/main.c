@@ -1,12 +1,54 @@
 #include "ch55x.h"
 #include "keyboard.h"
 #include "time.h"
+#include "neo.h"
+
+static void LED_on() {
+    int i;
+    int c1[3] = {0, 9, 13};
+    for (i = 0; i < 3; i++) {
+        NEO_writeColor(c1[i], 255, 0, 255);
+    }
+
+    int c2[5] = {1, 3, 6, 10, 14};
+    for (i = 0; i < 5; i++) {
+        NEO_writeColor(c2[i], 0, 0, 255);
+    }
+
+    int c3[4] = {4, 7, 11, 15};
+    for (i = 0; i < 4; i++) {
+        NEO_writeColor(c3[i], 0, 255, 0);
+    }
+
+    int c4[5] = {2, 5, 8, 12, 16};
+    for (i = 0; i < 5; i++) {
+        NEO_writeColor(c4[i], 255, 0, 0);
+    }
+
+    NEO_update();
+}
+
+static void LED_off() {
+    NEO_clearAll();
+    NEO_update();
+}
+
+static void LED_control() {
+    if (UIF_SUSPEND) {
+        if (!(USB_MIS_ST & bUMS_SUSPEND)) {
+            LED_on();
+        } else {
+            LED_off();
+        }
+    }
+}
 
 #ifdef SPLIT_SIDE_CENTRAL
 #include "usb.h"
 
 void USB_interrupt();
 void USB_ISR() __interrupt(INT_NO_USB) {
+    LED_control();
     USB_interrupt();
 }
 #endif
@@ -43,6 +85,7 @@ static void UART0_init() {
 #endif
 
 static void main() {
+    NEO_init();
     CLK_init();
 #if defined(SPLIT_ENABLE) && !defined(SPLIT_SOFT_SERIAL_PIN)
     UART0_init();

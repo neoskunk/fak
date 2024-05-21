@@ -7,6 +7,7 @@ sources_common = [
     'src/main.c',
     'src/time.c',
     'src/bootloader.c',
+    'src/neo.c',
 ]
 
 sources_central = [
@@ -63,7 +64,7 @@ foreach side : sides
     )
 
     sources = sources_common + [side_c]
-    
+
     if side == 'central'
         sources += sources_central
 
