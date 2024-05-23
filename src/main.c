@@ -3,6 +3,13 @@
 #include "time.h"
 #include "neo.h"
 
+const int DEBOUNCE_MILLIS = 100;
+typedef enum { false, true } bool;
+
+volatile bool _led_on = false;
+volatile bool _suspended = false;
+volatile uint16_t _last_state_change = 0;
+
 static void LED_on() {
     int i;
     int c1[3] = {0, 9, 13};
@@ -26,20 +33,32 @@ static void LED_on() {
     }
 
     NEO_update();
+    _led_on = true;
 }
 
 static void LED_off() {
     NEO_clearAll();
     NEO_update();
+    _led_on = false;
 }
 
 static void LED_control() {
+    if (_suspended && _led_on && get_timer() - _last_state_change > DEBOUNCE_MILLIS) {
+        LED_off();
+    } else if (!_suspended && !_led_on && get_timer() - _last_state_change > DEBOUNCE_MILLIS) {
+        LED_on();
+    }
+}
+
+static void change_state() {
     if (UIF_SUSPEND) {
-        if (!(USB_MIS_ST & bUMS_SUSPEND)) {
-            LED_on();
+        if (USB_MIS_ST & bUMS_SUSPEND) {
+            _suspended = true;
         } else {
-            LED_off();
+            _suspended = false;
         }
+
+        _last_state_change = get_timer();
     }
 }
 
@@ -48,7 +67,7 @@ static void LED_control() {
 
 void USB_interrupt();
 void USB_ISR() __interrupt(INT_NO_USB) {
-    LED_control();
+    change_state();
     USB_interrupt();
 }
 #endif
@@ -56,6 +75,7 @@ void USB_ISR() __interrupt(INT_NO_USB) {
 void TMR0_interrupt();
 void TMR0_ISR() __interrupt(INT_NO_TMR0) {
     TMR0_interrupt();
+    LED_control();
 }
 
 #if defined(SPLIT_ENABLE) && !defined(SPLIT_SOFT_SERIAL_PIN)
