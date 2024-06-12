@@ -4,57 +4,94 @@
 #include "neo.h"
 
 const int DEBOUNCE_MILLIS = 100;
-typedef enum { false, true } bool;
+typedef enum
+{
+    false,
+    true
+} bool;
 
 volatile bool _led_on = false;
 volatile bool _suspended = false;
 volatile uint16_t _last_state_change = 0;
 
-static void LED_on() {
+static void LED_on()
+{
     int i;
-    int c1[3] = {0, 9, 13};
-    for (i = 0; i < 3; i++) {
-        NEO_writeColor(c1[i], 255, 0, 255);
+
+    // red
+    int r1[2] = {1, 2};
+    for (i = 0; i < 2; i++)
+    {
+        NEO_writeColor(r1[i], 255, 0, 0);
     }
 
-    int c2[5] = {1, 3, 6, 10, 14};
-    for (i = 0; i < 5; i++) {
-        NEO_writeColor(c2[i], 0, 0, 255);
+    // orange
+    NEO_writeColor(0, 255, 30, 0);
+
+    // yellow
+    int r2[3] = {3, 4, 5};
+    for (i = 0; i < 3; i++)
+    {
+        NEO_writeColor(r2[i], 255, 255, 0);
     }
 
-    int c3[4] = {4, 7, 11, 15};
-    for (i = 0; i < 4; i++) {
-        NEO_writeColor(c3[i], 0, 255, 0);
+    // green
+    int r3[3] = {6, 7, 8};
+    for (i = 0; i < 3; i++)
+    {
+        NEO_writeColor(r3[i], 0, 255, 0);
     }
 
-    int c4[5] = {2, 5, 8, 12, 16};
-    for (i = 0; i < 5; i++) {
-        NEO_writeColor(c4[i], 255, 0, 0);
+    // cyan
+    NEO_writeColor(9, 0, 255, 255);
+
+    // blue
+    int r4[3] = {10, 11, 12};
+    for (i = 0; i < 3; i++)
+    {
+        NEO_writeColor(r4[i], 0, 0, 255);
+    }
+
+    // purple
+    int r5[4] = {13, 14, 15, 16};
+    for (i = 0; i < 4; i++)
+    {
+        NEO_writeColor(r5[i], 255, 0, 255);
     }
 
     NEO_update();
     _led_on = true;
 }
 
-static void LED_off() {
+static void LED_off()
+{
     NEO_clearAll();
     NEO_update();
     _led_on = false;
 }
 
-static void LED_control() {
-    if (_suspended && _led_on && get_timer() - _last_state_change > DEBOUNCE_MILLIS) {
+static void LED_control()
+{
+    if (_suspended && _led_on && get_timer() - _last_state_change > DEBOUNCE_MILLIS)
+    {
         LED_off();
-    } else if (!_suspended && !_led_on && get_timer() - _last_state_change > DEBOUNCE_MILLIS) {
+    }
+    else if (!_suspended && !_led_on && get_timer() - _last_state_change > DEBOUNCE_MILLIS)
+    {
         LED_on();
     }
 }
 
-static void change_state() {
-    if (UIF_SUSPEND) {
-        if (USB_MIS_ST & bUMS_SUSPEND) {
+static void change_state()
+{
+    if (UIF_SUSPEND)
+    {
+        if (USB_MIS_ST & bUMS_SUSPEND)
+        {
             _suspended = true;
-        } else {
+        }
+        else
+        {
             _suspended = false;
         }
 
@@ -66,14 +103,16 @@ static void change_state() {
 #include "usb.h"
 
 void USB_interrupt();
-void USB_ISR() __interrupt(INT_NO_USB) {
+void USB_ISR() __interrupt(INT_NO_USB)
+{
     change_state();
     USB_interrupt();
 }
 #endif
 
 void TMR0_interrupt();
-void TMR0_ISR() __interrupt(INT_NO_TMR0) {
+void TMR0_ISR() __interrupt(INT_NO_TMR0)
+{
     TMR0_interrupt();
     LED_control();
 }
@@ -81,12 +120,14 @@ void TMR0_ISR() __interrupt(INT_NO_TMR0) {
 #if defined(SPLIT_ENABLE) && !defined(SPLIT_SOFT_SERIAL_PIN)
 #ifdef SPLIT_SIDE_PERIPHERAL
 void UART0_interrupt();
-void UART0_ISR() __interrupt(INT_NO_UART0) {
+void UART0_ISR() __interrupt(INT_NO_UART0)
+{
     UART0_interrupt();
 }
 #endif
 
-static void UART0_init() {
+static void UART0_init()
+{
     // UART0 @ Timer1, 750k bps
     SM0 = 0;
     SM1 = 1;
@@ -104,7 +145,8 @@ static void UART0_init() {
 }
 #endif
 
-static void main() {
+static void main()
+{
     NEO_init();
     CLK_init();
 #if defined(SPLIT_ENABLE) && !defined(SPLIT_SOFT_SERIAL_PIN)
@@ -133,7 +175,8 @@ static void main() {
 
     EA = 1;
 
-    while (1) {
+    while (1)
+    {
         keyboard_scan();
     }
 }
